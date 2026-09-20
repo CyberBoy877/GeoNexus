@@ -310,11 +310,7 @@ function showCountryInfo(country) {
             </div>
 
 
-            <div class="info-card">
-                <span>👥</span>
-                <strong>Population</strong>
-                <p>${population}</p>
-            </div>
+            
 
 
             <div class="info-card">
