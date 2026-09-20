@@ -1,183 +1,172 @@
-/* =========================================
-   GeoNexus
-   Version 2 — Country Explorer
-   ========================================= */
-
-const width = 1000;
+const width = 1200;
 const height = 520;
+
+let countriesData = [];
 
 const svg = d3
     .select("#map")
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("preserveAspectRatio", "xMidYMid meet");
+    .attr("width", "100%")
+    .attr("height", "100%");
 
 const projection = d3
     .geoNaturalEarth1()
-    .scale(170)
-    .translate([
-        width / 2,
-        height / 2
-    ]);
+    .fitSize([width, height], {
+        type: "Sphere"
+    });
 
-const path = d3
-    .geoPath()
-    .projection(projection);
+const path = d3.geoPath().projection(projection);
 
 const mapGroup = svg.append("g");
 
-const mapURL =
-    "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-
-let countriesData = [];
+const countryInfo = document.getElementById("country-info");
 
 
-/* =========================================
-   LOAD MAP
-   ========================================= */
+// -----------------------------
+// LOAD COUNTRY DATA
+// -----------------------------
 
-fetch(mapURL)
-
+fetch("data/countries.json")
     .then(response => {
-
         if (!response.ok) {
-            throw new Error("Unable to load map data.");
+            throw new Error("Could not load countries.json");
         }
 
         return response.json();
-
     })
-
     .then(data => {
-
-        const countries =
-            topojson.feature(
-                data,
-                data.objects.countries
-            );
-
-        countriesData = countries.features;
-
-        const loading =
-            document.querySelector(".loading");
-
-        if (loading) {
-            loading.remove();
-        }
-
-
-        /* DRAW COUNTRIES */
-
-        mapGroup
-            .selectAll(".country")
-            .data(countriesData)
-            .enter()
-            .append("path")
-            .attr("class", "country")
-            .attr("d", path)
-
-            .on("click", function(event, d) {
-
-                selectCountry(d);
-
-            })
-
-            .append("title")
-
-            .text(d =>
-                d.properties.name ||
-                "Unknown Country"
-            );
-
-
-        console.log(
-            "GeoNexus map loaded successfully."
-        );
-
+        countriesData = data;
+        console.log("Country data loaded:", countriesData);
+        loadWorldMap();
     })
-
     .catch(error => {
-
         console.error(error);
 
         document.getElementById("map").innerHTML = `
-
             <div class="loading">
-
-                <h3>Map failed to load</h3>
-
-                <p>${error.message}</p>
-
+                Failed to load country data.
             </div>
-
         `;
-
     });
 
 
-/* =========================================
-   SELECT COUNTRY
-   ========================================= */
+// -----------------------------
+// LOAD WORLD MAP
+// -----------------------------
 
-function selectCountry(country) {
+function loadWorldMap() {
 
-    const countryName =
-        country.properties.name ||
-        "Unknown Country";
+    fetch(
+        "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
+    )
+        .then(response => response.json())
+        .then(world => {
 
+            const countries = topojson.feature(
+                world,
+                world.objects.countries
+            ).features;
 
-    /* Remove previous selection */
+            mapGroup
+                .selectAll(".country")
+                .data(countries)
+                .enter()
+                .append("path")
+                .attr("class", "country")
+                .attr("d", path)
+                .on("click", function(event, d) {
 
-    mapGroup
-        .selectAll(".country")
-        .classed("selected-country", false);
+                    const countryName =
+                        d.properties.name;
 
+                    selectCountry(countryName);
+                });
 
-    /* Highlight selected country */
+            document.querySelector(".loading")?.remove();
 
-    mapGroup
-        .selectAll(".country")
-        .filter(d => d === country)
-        .classed("selected-country", true);
+            console.log(
+                "World map loaded:",
+                countries.length,
+                "countries"
+            );
+        })
+        .catch(error => {
 
+            console.error(error);
 
-    /* Show information */
-
-    showCountryInfo(countryName);
-
+            document.getElementById("map").innerHTML = `
+                <div class="loading">
+                    Failed to load world map.
+                </div>
+            `;
+        });
 }
 
 
-/* =========================================
-   COUNTRY INFORMATION
-   ========================================= */
+// -----------------------------
+// SELECT COUNTRY
+// -----------------------------
+
+function selectCountry(countryName) {
+
+    d3.selectAll(".country")
+        .classed("selected-country", false);
+
+    d3.selectAll(".country")
+        .filter(function(d) {
+            return d.properties.name === countryName;
+        })
+        .classed("selected-country", true);
+
+    showCountryInfo(countryName);
+}
+
+
+// -----------------------------
+// SHOW COUNTRY INFORMATION
+// -----------------------------
 
 function showCountryInfo(countryName) {
 
-    const countryInfo =
-        document.getElementById(
-            "country-info"
-        );
+    const country = countriesData.find(
+        item =>
+            item.name.toLowerCase() ===
+            countryName.toLowerCase()
+    );
 
+    if (!country) {
+
+        countryInfo.innerHTML = `
+            <div class="country-header">
+                <div class="country-icon">🌍</div>
+
+                <div>
+                    <h2>${countryName}</h2>
+                    <p>Country information is being added.</p>
+                </div>
+            </div>
+
+            <p>
+                Detailed information for this country
+                is coming soon.
+            </p>
+        `;
+
+        return;
+    }
 
     countryInfo.innerHTML = `
 
         <div class="country-header">
 
-            <span class="country-icon">
+            <div class="country-icon">
                 🌍
-            </span>
+            </div>
 
             <div>
-
-                <h2>
-                    ${countryName}
-                </h2>
-
-                <p>
-                    Country selected
-                </p>
-
+                <h2>${country.name}</h2>
+                <p>Explore ${country.name}</p>
             </div>
 
         </div>
@@ -186,62 +175,48 @@ function showCountryInfo(countryName) {
         <div class="country-details">
 
             <div class="info-card">
-
                 <span>🌎</span>
-
-                <strong>
-                    Continent
-                </strong>
-
-                <p>
-                    Information coming soon
-                </p>
-
+                <strong>Continent</strong>
+                <p>${country.continent}</p>
             </div>
 
 
             <div class="info-card">
-
                 <span>🏛️</span>
-
-                <strong>
-                    Capital
-                </strong>
-
-                <p>
-                    Information coming soon
-                </p>
-
+                <strong>Capital</strong>
+                <p>${country.capital}</p>
             </div>
 
 
             <div class="info-card">
-
                 <span>👥</span>
-
-                <strong>
-                    Population
-                </strong>
-
-                <p>
-                    Information coming soon
-                </p>
-
+                <strong>Population</strong>
+                <p>${country.population}</p>
             </div>
 
 
             <div class="info-card">
-
                 <span>📐</span>
+                <strong>Area</strong>
+                <p>${country.area}</p>
+            </div>
 
-                <strong>
-                    Area
-                </strong>
+        </div>
 
-                <p>
-                    Information coming soon
-                </p>
 
+        <div class="country-details">
+
+            <div class="info-card">
+                <span>💰</span>
+                <strong>Currency</strong>
+                <p>${country.currency}</p>
+            </div>
+
+
+            <div class="info-card">
+                <span>🗣️</span>
+                <strong>Languages</strong>
+                <p>${country.languages}</p>
             </div>
 
         </div>
@@ -249,94 +224,97 @@ function showCountryInfo(countryName) {
 
         <button
             class="explore-button"
-            onclick="exploreCountry('${countryName}')"
+            onclick="exploreCountry('${country.name}')"
         >
-            Explore ${countryName} →
+            Explore ${country.name}
         </button>
-
     `;
-
 }
 
 
-/* =========================================
-   SEARCH
-   ========================================= */
+// -----------------------------
+// SEARCH COUNTRY
+// -----------------------------
 
 function searchCountry() {
 
     const input =
-        document.getElementById(
-            "searchInput"
-        );
-
-
-    const searchTerm =
-        input.value
+        document
+            .getElementById("searchInput")
+            .value
             .trim()
             .toLowerCase();
 
-
-    if (searchTerm === "") {
-
-        alert(
-            "Please enter a country name."
-        );
-
+    if (!input) {
+        alert("Please enter a country name.");
         return;
-
     }
 
-
-    const foundCountry =
-        countriesData.find(country => {
-
-            const name =
-                country.properties.name || "";
-
-            return name
+    const country = countriesData.find(
+        item =>
+            item.name
                 .toLowerCase()
-                .includes(searchTerm);
+                .includes(input)
+    );
 
-        });
-
-
-    if (!foundCountry) {
+    if (!country) {
 
         alert(
-            "Country not found on the map."
+            "Country not found. Try another name."
         );
 
         return;
-
     }
 
+    selectCountry(country.name);
 
-    selectCountry(foundCountry);
-
-
-    /* Scroll to information */
-
-    document
-        .getElementById("country-info")
-        .scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-
+    highlightCountryOnMap(country.name);
 }
 
 
-/* =========================================
-   EXPLORE COUNTRY
-   ========================================= */
+// -----------------------------
+// HIGHLIGHT COUNTRY
+// -----------------------------
+
+function highlightCountryOnMap(countryName) {
+
+    d3.selectAll(".country")
+        .classed("selected-country", false);
+
+    const matchingCountry =
+        d3.selectAll(".country")
+            .filter(function(d) {
+
+                return (
+                    d.properties.name
+                        .toLowerCase() ===
+                    countryName.toLowerCase()
+                );
+            });
+
+    matchingCountry
+        .classed("selected-country", true);
+
+    if (!matchingCountry.empty()) {
+
+        const node =
+            matchingCountry.node();
+
+        node.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }
+}
+
+
+// -----------------------------
+// EXPLORE COUNTRY
+// -----------------------------
 
 function exploreCountry(countryName) {
 
     alert(
-        "State and province exploration for " +
-        countryName +
-        " will be added next."
+        `${countryName} exploration will be added in the next version!`
     );
-
 }
