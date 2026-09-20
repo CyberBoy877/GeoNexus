@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cyberboy877.github.io/GeoNexus/sitemap.xml
