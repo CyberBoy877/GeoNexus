@@ -1,125 +1,163 @@
-const width = 1200;
-const height = 520;
+/* =========================================================
+   GeoNexus — Interactive World Explorer
+========================================================= */
+
+
+/* =========================
+   GLOBAL VARIABLES
+========================= */
 
 let countriesData = [];
-let mapCountries = [];
+let worldFeatures = [];
 
-const svg = d3
-    .select("#map")
-    .append("svg")
-    .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("width", "100%")
-    .attr("height", "100%");
+let svg;
+let projection;
+let path;
 
-const projection = d3
-    .geoNaturalEarth1()
-    .fitSize([width, height], {
-        type: "Sphere"
-    });
-
-const path = d3.geoPath().projection(projection);
-
-const mapGroup = svg.append("g");
-
-const countryInfo = document.getElementById("country-info");
+let selectedFeature = null;
 
 
-// ========================================
-// LOAD DATA
-// ========================================
+/* =========================
+   DOM ELEMENTS
+========================= */
 
-Promise.all([
-    fetch("data/countries.json").then(response => {
-        if (!response.ok) {
-            throw new Error("countries.json could not be loaded");
-        }
+const mapElement =
+    document.getElementById("map");
 
-        return response.json();
-    }),
+const countryInfo =
+    document.getElementById("country-info");
 
-    fetch(
-        "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
-    ).then(response => {
-        if (!response.ok) {
-            throw new Error("World map could not be loaded");
-        }
+const searchInput =
+    document.getElementById("searchInput");
 
-        return response.json();
-    })
-])
-.then(([data, world]) => {
+const searchButton =
+    document.getElementById("searchButton");
 
-    countriesData = data;
+const searchSuggestions =
+    document.getElementById("searchSuggestions");
 
-    console.log(
-        "Country database loaded:",
-        countriesData.length,
-        "records"
-    );
+const resetButton =
+    document.getElementById("resetButton");
 
-    loadWorldMap(world);
-})
-.catch(error => {
+const mapStatus =
+    document.getElementById("mapStatus");
 
-    console.error(error);
-
-    document.getElementById("map").innerHTML = `
-        <div class="loading">
-            Failed to load GeoNexus data.
-        </div>
-    `;
-});
+const themeToggle =
+    document.getElementById("themeToggle");
 
 
-// ========================================
-// WORLD MAP
-// ========================================
+/* =========================
+   COUNTRY NAME NORMALIZATION
+========================= */
 
-function loadWorldMap(world) {
+function normalizeName(name) {
 
-    mapCountries =
-        topojson.feature(
-            world,
-            world.objects.countries
-        ).features;
+    if (!name) {
+        return "";
+    }
 
-    mapGroup
-        .selectAll(".country")
-        .data(mapCountries)
-        .enter()
-        .append("path")
-        .attr("class", "country")
-        .attr("d", path)
-        .on("click", function(event, d) {
-
-            const mapName =
-                d.properties.name;
-
-            const country =
-                findCountry(mapName);
-
-            if (country) {
-                selectCountry(country);
-            } else {
-                showUnknownCountry(mapName);
-            }
-        });
-
-    document
-        .querySelector(".loading")
-        ?.remove();
-
-    console.log(
-        "World map loaded:",
-        mapCountries.length,
-        "map regions"
-    );
+    return String(name)
+        .toLowerCase()
+        .trim()
+        .replace(/[’']/g, "")
+        .replace(/\s+/g, " ");
 }
 
 
-// ========================================
-// FIND COUNTRY
-// ========================================
+/* =========================
+   COUNTRY ALIASES
+========================= */
+
+const countryAliases = {
+
+    "democratic republic of the congo":
+        [
+            "democratic republic of the congo",
+            "democratic republic of congo",
+            "drc",
+            "dr congo",
+            "congo-kinshasa"
+        ],
+
+    "republic of the congo":
+        [
+            "republic of the congo",
+            "republic of congo",
+            "congo-brazzaville"
+        ],
+
+    "cote divoire":
+        [
+            "cote divoire",
+            "ivory coast",
+            "côte divoire"
+        ],
+
+    "czechia":
+        [
+            "czechia",
+            "czech republic"
+        ],
+
+    "eswatini":
+        [
+            "eswatini",
+            "swaziland"
+        ],
+
+    "myanmar":
+        [
+            "myanmar",
+            "burma"
+        ],
+
+    "cabo verde":
+        [
+            "cabo verde",
+            "cape verde"
+        ],
+
+    "timor-leste":
+        [
+            "timor-leste",
+            "east timor"
+        ],
+
+    "north macedonia":
+        [
+            "north macedonia",
+            "macedonia"
+        ]
+};
+
+
+/* =========================
+   GET ALIAS GROUP
+========================= */
+
+function getAliasGroup(name) {
+
+    const normalized =
+        normalizeName(name);
+
+    for (const key in countryAliases) {
+
+        if (
+            countryAliases[key]
+                .map(normalizeName)
+                .includes(normalized)
+        ) {
+            return countryAliases[key];
+        }
+    }
+
+    return [normalized];
+}
+
+
+/* =========================
+   FIND COUNTRY
+========================= */
 
 function findCountry(searchName) {
 
@@ -127,139 +165,317 @@ function findCountry(searchName) {
         return null;
     }
 
-    const target = searchName
-        .toLowerCase()
-        .trim();
+    const target =
+        normalizeName(searchName);
 
-    // Country name aliases
-    const aliases = {
-        "democratic republic of the congo": "democratic republic of the congo",
-        "dr congo": "democratic republic of the congo",
-        "drc": "democratic republic of the congo",
-        "republic of the congo": "republic of the congo",
-        "congo": "republic of the congo",
-        "ivory coast": "côte d'ivoire",
-        "czech republic": "czechia",
-        "swaziland": "eswatini",
-        "burma": "myanmar",
-        "cape verde": "cabo verde"
-    };
-
-    const normalizedTarget =
-        aliases[target] || target;
+    const aliases =
+        getAliasGroup(target);
 
     return countriesData.find(country => {
 
         const names = [
+
             country.name?.common,
+
             country.name?.official,
+
             ...(country.altSpellings || [])
+
         ]
         .filter(Boolean)
-        .map(name =>
-            name.toLowerCase().trim()
-        );
+        .map(normalizeName);
+
 
         const codes = [
+
             country.cca2,
+
             country.cca3
+
         ]
         .filter(Boolean)
-        .map(code =>
-            code.toLowerCase().trim()
-        );
+        .map(normalizeName);
 
-        return (
-            names.includes(normalizedTarget) ||
-            codes.includes(normalizedTarget)
+
+        if (
+            names.includes(target) ||
+            codes.includes(target)
+        ) {
+            return true;
+        }
+
+
+        return aliases.some(alias =>
+            names.includes(alias)
         );
     });
 }
-// ========================================
-// SELECT COUNTRY
-// ========================================
 
-function selectCountry(country) {
 
-    clearSelection();
+/* =========================
+   LOAD DATA
+========================= */
 
-    const mapName =
-        country.name.common;
+async function loadData() {
 
-    const matchingPaths =
-        d3.selectAll(".country")
-            .filter(function(d) {
+    try {
 
-                return namesMatch(
-                    d.properties.name,
-                    country
-                );
-            });
+        mapStatus.textContent =
+            "Loading geographic data...";
 
-    matchingPaths
+
+        const [
+            countryResponse,
+            worldResponse
+        ] = await Promise.all([
+
+            fetch("data/countries.json"),
+
+            fetch(
+                "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
+            )
+
+        ]);
+
+
+        if (!countryResponse.ok) {
+            throw new Error(
+                "Could not load countries.json"
+            );
+        }
+
+
+        if (!worldResponse.ok) {
+            throw new Error(
+                "Could not load world map"
+            );
+        }
+
+
+        countriesData =
+            await countryResponse.json();
+
+
+        const worldTopology =
+            await worldResponse.json();
+
+
+        worldFeatures =
+            topojson.feature(
+                worldTopology,
+                worldTopology.objects.countries
+            ).features;
+
+
+        drawMap();
+
+
+        mapStatus.textContent =
+            `${worldFeatures.length} regions available`;
+
+
+        document
+            .querySelector(".loading-screen")
+            ?.remove();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        mapStatus.textContent =
+            "Map failed to load";
+
+        mapElement.innerHTML = `
+
+            <div class="error-message">
+
+                <strong>
+                    Unable to load the world map.
+                </strong>
+
+                <p style="margin-top:8px;">
+                    Please refresh the page and try again.
+                </p>
+
+            </div>
+
+        `;
+    }
+}
+
+
+/* =========================
+   DRAW MAP
+========================= */
+
+function drawMap() {
+
+    mapElement.innerHTML = "";
+
+
+    const width =
+        mapElement.clientWidth;
+
+    const height =
+        mapElement.clientHeight;
+
+
+    svg = d3
+        .select("#map")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr(
+            "viewBox",
+            `0 0 ${width} ${height}`
+        )
+        .attr("preserveAspectRatio", "xMidYMid meet");
+
+
+    projection =
+        d3.geoNaturalEarth1()
+            .fitExtent(
+                [
+                    [15, 15],
+                    [width - 15, height - 15]
+                ],
+                {
+                    type: "FeatureCollection",
+                    features: worldFeatures
+                }
+            );
+
+
+    path =
+        d3.geoPath()
+            .projection(projection);
+
+
+    svg
+        .selectAll(".country")
+        .data(worldFeatures)
+        .enter()
+        .append("path")
+        .attr("class", "country")
+        .attr("d", path)
+
+        .attr(
+            "aria-label",
+            feature =>
+                getMapCountryName(feature)
+        )
+
+        .on("click", function(event, feature) {
+
+            selectMapCountry(
+                feature,
+                this
+            );
+
+        })
+
+        .on("mouseover", function(event, feature) {
+
+            mapStatus.textContent =
+                getMapCountryName(feature);
+
+        })
+
+        .on("mouseout", function() {
+
+            mapStatus.textContent =
+                `${worldFeatures.length} regions available`;
+
+        });
+
+
+    window.addEventListener(
+        "resize",
+        resizeMap
+    );
+}
+
+
+/* =========================
+   MAP COUNTRY NAME
+========================= */
+
+function getMapCountryName(feature) {
+
+    return (
+        feature.properties?.name ||
+        feature.properties?.NAME ||
+        feature.properties?.name_long ||
+        "Unknown region"
+    );
+}
+
+
+/* =========================
+   SELECT MAP COUNTRY
+========================= */
+
+function selectMapCountry(
+    feature,
+    element
+) {
+
+    d3
+        .selectAll(".country")
+        .classed(
+            "selected-country",
+            false
+        );
+
+
+    d3
+        .select(element)
         .classed(
             "selected-country",
             true
         );
 
-    showCountryInfo(country);
-}
+
+    selectedFeature = feature;
 
 
-// ========================================
-// COUNTRY NAME MATCHING
-// ========================================
-
-function namesMatch(mapName, country) {
-
-    const map =
-        mapName
-            ?.toLowerCase()
-            .trim();
-
-    const common =
-        country.name?.common
-            ?.toLowerCase()
-            .trim();
-
-    const official =
-        country.name?.official
-            ?.toLowerCase()
-            .trim();
-
-    const alternatives =
-        country.altSpellings || [];
-
-    return (
-        map === common ||
-        map === official ||
-        alternatives.some(
-            name =>
-                name
-                    .toLowerCase()
-                    .trim() === map
-        )
-    );
-}
+    const mapName =
+        getMapCountryName(feature);
 
 
-// ========================================
-// CLEAR MAP SELECTION
-// ========================================
+    const country =
+        findCountry(mapName);
 
-function clearSelection() {
 
-    d3.selectAll(".country")
-        .classed(
-            "selected-country",
-            false
+    if (country) {
+
+        showCountryInfo(country);
+
+        mapStatus.textContent =
+            country.name.common;
+
+    } else {
+
+        showUnavailableInfo(
+            mapName
         );
+
+        mapStatus.textContent =
+            mapName;
+    }
+
+
+    countryInfo.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
 }
 
 
-// ========================================
-// COUNTRY INFORMATION
-// ========================================
+/* =========================
+   SHOW COUNTRY INFORMATION
+========================= */
 
 function showCountryInfo(country) {
 
@@ -268,25 +484,44 @@ function showCountryInfo(country) {
             ? country.capital.join(", ")
             : "No capital listed";
 
-    const continent =
+
+    const region =
         country.region ||
         "Unknown";
 
-    
 
     const area =
         country.area
             ? `${formatNumber(country.area)} km²`
             : "Not available";
 
+
     const currency =
         getCurrencies(country);
+
 
     const languages =
         getLanguages(country);
 
+
     const flag =
-        country.flag || "🌍";
+        country.flag ||
+        "🌍";
+
+
+    const commonName =
+        country.name?.common ||
+        "Unknown country";
+
+
+    const officialName =
+        country.name?.official ||
+        commonName;
+
+
+    countryInfo.className =
+        "country-info";
+
 
     countryInfo.innerHTML = `
 
@@ -297,13 +532,15 @@ function showCountryInfo(country) {
             </div>
 
             <div>
+
                 <h2>
-                    ${country.name.common}
+                    ${escapeHTML(commonName)}
                 </h2>
 
                 <p>
-                    ${country.name.official}
+                    ${escapeHTML(officialName)}
                 </p>
+
             </div>
 
         </div>
@@ -311,223 +548,105 @@ function showCountryInfo(country) {
 
         <div class="country-details">
 
-            <div class="info-card">
-                <span>🌎</span>
-                <strong>Region</strong>
-                <p>${continent}</p>
-            </div>
-
 
             <div class="info-card">
+
                 <span>🏛️</span>
-                <strong>Capital</strong>
-                <p>${capital}</p>
+
+                <strong>
+                    Capital
+                </strong>
+
+                <p>
+                    ${escapeHTML(capital)}
+                </p>
+
             </div>
-
-
-            
 
 
             <div class="info-card">
-                <span>📐</span>
-                <strong>Area</strong>
-                <p>${area}</p>
+
+                <span>🌎</span>
+
+                <strong>
+                    Region
+                </strong>
+
+                <p>
+                    ${escapeHTML(region)}
+                </p>
+
             </div>
+
+
+            <div class="info-card">
+
+                <span>📐</span>
+
+                <strong>
+                    Area
+                </strong>
+
+                <p>
+                    ${escapeHTML(area)}
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span>💰</span>
+
+                <strong>
+                    Currency
+                </strong>
+
+                <p>
+                    ${escapeHTML(currency)}
+                </p>
+
+            </div>
+
 
         </div>
 
 
-        <div class="country-details">
+        <div class="info-card" style="margin-bottom:20px;">
 
-            <div class="info-card">
-                <span>💰</span>
-                <strong>Currency</strong>
-                <p>${currency}</p>
-            </div>
+            <span>🗣️</span>
 
+            <strong>
+                Languages
+            </strong>
 
-            <div class="info-card">
-                <span>🗣️</span>
-                <strong>Languages</strong>
-                <p>${languages}</p>
-            </div>
+            <p>
+                ${escapeHTML(languages)}
+            </p>
 
         </div>
 
 
         <button
             class="explore-button"
-            onclick="exploreCountry(
-                '${escapeQuotes(country.name.common)}'
-            )"
+            onclick="exploreCountry('${escapeQuotes(commonName)}')"
         >
-            Explore ${country.name.common}
+            🔎 Search this country
         </button>
+
     `;
 }
 
 
-// ========================================
-// CURRENCY
-// ========================================
+/* =========================
+   UNAVAILABLE INFORMATION
+========================= */
 
-function getCurrencies(country) {
+function showUnavailableInfo(name) {
 
-    if (!country.currencies) {
-        return "Not available";
-    }
+    countryInfo.className =
+        "country-info";
 
-    return Object.values(
-        country.currencies
-    )
-    .map(currency => {
-
-        if (currency.symbol) {
-            return `${currency.name} (${currency.symbol})`;
-        }
-
-        return currency.name;
-
-    })
-    .join(", ");
-}
-
-
-// ========================================
-// LANGUAGES
-// ========================================
-
-function getLanguages(country) {
-
-    if (!country.languages) {
-        return "Not available";
-    }
-
-    return Object.values(
-        country.languages
-    ).join(", ");
-}
-
-
-// ========================================
-// NUMBER FORMAT
-// ========================================
-
-function formatNumber(number) {
-
-    return new Intl.NumberFormat(
-        "en-US"
-    ).format(number);
-}
-
-
-// ========================================
-// SEARCH
-// ========================================
-
-function searchCountry() {
-
-    const input =
-        document
-            .getElementById("searchInput")
-            .value
-            .trim();
-
-    if (!input) {
-
-        alert(
-            "Please enter a country name."
-        );
-
-        return;
-    }
-
-    const country =
-        countriesData.find(item => {
-
-            const common =
-                item.name?.common
-                    ?.toLowerCase();
-
-            const official =
-                item.name?.official
-                    ?.toLowerCase();
-
-            const cca2 =
-                item.cca2
-                    ?.toLowerCase();
-
-            const cca3 =
-                item.cca3
-                    ?.toLowerCase();
-
-            const query =
-                input.toLowerCase();
-
-            return (
-                common?.includes(query) ||
-                official?.includes(query) ||
-                cca2 === query ||
-                cca3 === query
-            );
-        });
-
-    if (!country) {
-
-        alert(
-            "Country not found. Try another name."
-        );
-
-        return;
-    }
-
-    selectCountry(country);
-
-    document
-        .getElementById("country-info")
-        .scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-}
-
-
-// ========================================
-// ENTER KEY SEARCH
-// ========================================
-
-document
-    .getElementById("searchInput")
-    .addEventListener(
-        "keydown",
-        function(event) {
-
-            if (event.key === "Enter") {
-                searchCountry();
-            }
-        }
-    );
-
-
-// ========================================
-// UNKNOWN COUNTRY
-// ========================================
-
-function showUnknownCountry(name) {
-
-    clearSelection();
-
-    d3.selectAll(".country")
-        .filter(function(d) {
-
-            return (
-                d.properties.name === name
-            );
-        })
-        .classed(
-            "selected-country",
-            true
-        );
 
     countryInfo.innerHTML = `
 
@@ -538,43 +657,637 @@ function showUnknownCountry(name) {
             </div>
 
             <div>
-                <h2>${name}</h2>
+
+                <h2>
+                    ${escapeHTML(name)}
+                </h2>
 
                 <p>
-                    Geographic region detected
+                    Geographic region selected
                 </p>
+
             </div>
 
         </div>
 
-        <p>
-            Detailed information for this
-            region is not available in the
-            current database.
-        </p>
+
+        <div class="error-message">
+
+            <strong>
+                Detailed information is not available.
+            </strong>
+
+            <p style="margin-top:8px;">
+                This region is present on the interactive
+                map, but its detailed record could not be
+                matched in the current database.
+            </p>
+
+        </div>
+
     `;
 }
 
 
-// ========================================
-// EXPLORE COUNTRY
-// ========================================
+/* =========================
+   CURRENCIES
+========================= */
 
-function exploreCountry(countryName) {
+function getCurrencies(country) {
 
-    alert(
-        `${countryName} regional exploration is coming next!`
+    if (!country.currencies) {
+        return "Not available";
+    }
+
+
+    const currencies =
+        Object.values(country.currencies);
+
+
+    if (!currencies.length) {
+        return "Not available";
+    }
+
+
+    return currencies
+        .map(currency => {
+
+            const name =
+                currency.name ||
+                "Unknown";
+
+            const symbol =
+                currency.symbol
+                    ? ` (${currency.symbol})`
+                    : "";
+
+            return `${name}${symbol}`;
+
+        })
+        .join(", ");
+}
+
+
+/* =========================
+   LANGUAGES
+========================= */
+
+function getLanguages(country) {
+
+    if (!country.languages) {
+        return "Not available";
+    }
+
+
+    const languages =
+        Object.values(country.languages);
+
+
+    if (!languages.length) {
+        return "Not available";
+    }
+
+
+    return languages.join(", ");
+}
+
+
+/* =========================
+   FORMAT NUMBERS
+========================= */
+
+function formatNumber(number) {
+
+    if (
+        number === undefined ||
+        number === null ||
+        number === 0
+    ) {
+        return "Not available";
+    }
+
+
+    return Number(number)
+        .toLocaleString();
+}
+
+
+/* =========================
+   SEARCH
+========================= */
+
+function searchCountry() {
+
+    const query =
+        searchInput.value.trim();
+
+
+    if (!query) {
+
+        searchInput.focus();
+
+        return;
+    }
+
+
+    const country =
+        findCountry(query);
+
+
+    if (!country) {
+
+        showUnavailableInfo(
+            query
+        );
+
+        searchSuggestions
+            .classList
+            .remove("show");
+
+        return;
+    }
+
+
+    showCountryInfo(country);
+
+
+    searchSuggestions
+        .classList
+        .remove("show");
+
+
+    highlightMapCountry(
+        country
+    );
+
+
+    countryInfo.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
+}
+
+
+/* =========================
+   HIGHLIGHT SEARCHED COUNTRY
+========================= */
+
+function highlightMapCountry(country) {
+
+    d3
+        .selectAll(".country")
+        .classed(
+            "selected-country",
+            false
+        );
+
+
+    const targetNames = [
+
+        country.name?.common,
+
+        country.name?.official,
+
+        ...(country.altSpellings || [])
+
+    ]
+    .filter(Boolean)
+    .map(normalizeName);
+
+
+    d3
+        .selectAll(".country")
+        .each(function(feature) {
+
+            const mapName =
+                normalizeName(
+                    getMapCountryName(feature)
+                );
+
+
+            if (
+                targetNames.includes(mapName)
+            ) {
+
+                d3
+                    .select(this)
+                    .classed(
+                        "selected-country",
+                        true
+                    );
+            }
+
+        });
+}
+
+
+/* =========================
+   SEARCH SUGGESTIONS
+========================= */
+
+function updateSuggestions() {
+
+    const query =
+        normalizeName(
+            searchInput.value
+        );
+
+
+    if (
+        !query ||
+        !countriesData.length
+    ) {
+
+        searchSuggestions
+            .classList
+            .remove("show");
+
+        return;
+    }
+
+
+    const results =
+        countriesData
+            .filter(country => {
+
+                const common =
+                    normalizeName(
+                        country.name?.common
+                    );
+
+                const official =
+                    normalizeName(
+                        country.name?.official
+                    );
+
+                return (
+                    common.includes(query) ||
+                    official.includes(query)
+                );
+
+            })
+            .slice(0, 6);
+
+
+    if (!results.length) {
+
+        searchSuggestions
+            .classList
+            .remove("show");
+
+        return;
+    }
+
+
+    searchSuggestions.innerHTML =
+        results
+            .map(country => `
+
+                <button
+                    class="suggestion"
+                    data-name="${escapeHTML(
+                        country.name.common
+                    )}"
+                >
+
+                    <span class="suggestion-name">
+
+                        ${country.flag || "🌍"}
+
+                        ${escapeHTML(
+                            country.name.common
+                        )}
+
+                    </span>
+
+                    <span class="suggestion-code">
+
+                        ${country.cca3 || ""}
+
+                    </span>
+
+                </button>
+
+            `)
+            .join("");
+
+
+    searchSuggestions
+        .classList
+        .add("show");
+
+
+    document
+        .querySelectorAll(".suggestion")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    searchInput.value =
+                        button.dataset.name;
+
+                    searchCountry();
+
+                }
+            );
+
+        });
+}
+
+
+/* =========================
+   EXPLORE COUNTRY
+========================= */
+
+function exploreCountry(name) {
+
+    searchInput.value =
+        name;
+
+    searchCountry();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetMap() {
+
+    searchInput.value = "";
+
+    searchSuggestions
+        .classList
+        .remove("show");
+
+
+    d3
+        .selectAll(".country")
+        .classed(
+            "selected-country",
+            false
+        );
+
+
+    selectedFeature = null;
+
+
+    countryInfo.className =
+        "country-info empty-state";
+
+
+    countryInfo.innerHTML = `
+
+        <div class="empty-icon">
+            🌍
+        </div>
+
+        <h2>
+            Select a country
+        </h2>
+
+        <p>
+            Click a country on the map to explore
+            its geographic information.
+        </p>
+
+    `;
+
+
+    mapStatus.textContent =
+        `${worldFeatures.length} regions available`;
+}
+
+
+/* =========================
+   RESIZE MAP
+========================= */
+
+function resizeMap() {
+
+    if (
+        !svg ||
+        !worldFeatures.length
+    ) {
+        return;
+    }
+
+
+    const width =
+        mapElement.clientWidth;
+
+    const height =
+        mapElement.clientHeight;
+
+
+    svg
+        .attr("width", width)
+        .attr("height", height)
+        .attr(
+            "viewBox",
+            `0 0 ${width} ${height}`
+        );
+
+
+    projection =
+        d3.geoNaturalEarth1()
+            .fitExtent(
+                [
+                    [15, 15],
+                    [width - 15, height - 15]
+                ],
+                {
+                    type: "FeatureCollection",
+                    features: worldFeatures
+                }
+            );
+
+
+    path =
+        d3.geoPath()
+            .projection(projection);
+
+
+    svg
+        .selectAll(".country")
+        .attr("d", path);
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+/* =========================
+   ESCAPE QUOTES
+========================= */
+
+function escapeQuotes(value) {
+
+    return String(value ?? "")
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'");
+}
+
+
+/* =========================
+   THEME
+========================= */
+
+function setupTheme() {
+
+    const savedTheme =
+        localStorage.getItem(
+            "geonexus-theme"
+        );
+
+
+    if (savedTheme === "dark") {
+
+        document.body.classList.add(
+            "dark"
+        );
+
+        themeToggle.textContent =
+            "☀️";
+    }
+
+
+    themeToggle.addEventListener(
+        "click",
+        () => {
+
+            document.body.classList.toggle(
+                "dark"
+            );
+
+
+            const dark =
+                document.body.classList.contains(
+                    "dark"
+                );
+
+
+            themeToggle.textContent =
+                dark
+                    ? "☀️"
+                    : "🌙";
+
+
+            localStorage.setItem(
+                "geonexus-theme",
+                dark
+                    ? "dark"
+                    : "light"
+            );
+
+        }
     );
 }
 
 
-// ========================================
-// ESCAPE QUOTES
-// ========================================
+/* =========================
+   EVENT LISTENERS
+========================= */
 
-function escapeQuotes(text) {
+searchButton.addEventListener(
+    "click",
+    searchCountry
+);
 
-    return text
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '\\"');
-}
+
+searchInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            searchCountry();
+
+        }
+
+    }
+);
+
+
+searchInput.addEventListener(
+    "input",
+    updateSuggestions
+);
+
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if (
+            !event.target.closest(
+                ".search-wrapper"
+            )
+        ) {
+
+            searchSuggestions
+                .classList
+                .remove("show");
+
+        }
+
+    }
+);
+
+
+resetButton.addEventListener(
+    "click",
+    resetMap
+);
+
+
+document
+    .querySelectorAll(
+        ".quick-searches button"
+    )
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                searchInput.value =
+                    button.dataset.country;
+
+                searchCountry();
+
+            }
+        );
+
+    });
+
+
+/* =========================
+   START APPLICATION
+========================= */
+
+setupTheme();
+
+loadData();
+ 
