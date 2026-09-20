@@ -1,1 +1,29 @@
-
+[
+  {
+    "name": "India",
+    "capital": "New Delhi",
+    "continent": "Asia",
+    "population": "1.4 billion",
+    "area": "3,287,263 km²",
+    "currency": "Indian Rupee (INR)",
+    "languages": "Hindi, English and other regional languages"
+  },
+  {
+    "name": "United States",
+    "capital": "Washington, D.C.",
+    "continent": "North America",
+    "population": "About 340 million",
+    "area": "9,833,520 km²",
+    "currency": "United States Dollar (USD)",
+    "languages": "English and other languages"
+  },
+  {
+    "name": "Japan",
+    "capital": "Tokyo",
+    "continent": "Asia",
+    "population": "About 124 million",
+    "area": "377,975 km²",
+    "currency": "Japanese Yen (JPY)",
+    "languages": "Japanese"
+  }
+]
