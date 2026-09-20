@@ -127,39 +127,54 @@ function findCountry(searchName) {
         return null;
     }
 
-    const target =
-        searchName
-            .toLowerCase()
-            .trim();
+    const target = searchName
+        .toLowerCase()
+        .trim();
+
+    // Country name aliases
+    const aliases = {
+        "democratic republic of the congo": "democratic republic of the congo",
+        "dr congo": "democratic republic of the congo",
+        "drc": "democratic republic of the congo",
+        "republic of the congo": "republic of the congo",
+        "congo": "republic of the congo",
+        "ivory coast": "côte d'ivoire",
+        "czech republic": "czechia",
+        "swaziland": "eswatini",
+        "burma": "myanmar",
+        "cape verde": "cabo verde"
+    };
+
+    const normalizedTarget =
+        aliases[target] || target;
 
     return countriesData.find(country => {
 
-        const common =
-            country.name?.common
-                ?.toLowerCase();
+        const names = [
+            country.name?.common,
+            country.name?.official,
+            ...(country.altSpellings || [])
+        ]
+        .filter(Boolean)
+        .map(name =>
+            name.toLowerCase().trim()
+        );
 
-        const official =
-            country.name?.official
-                ?.toLowerCase();
-
-        const cca2 =
-            country.cca2
-                ?.toLowerCase();
-
-        const cca3 =
+        const codes = [
+            country.cca2,
             country.cca3
-                ?.toLowerCase();
+        ]
+        .filter(Boolean)
+        .map(code =>
+            code.toLowerCase().trim()
+        );
 
         return (
-            common === target ||
-            official === target ||
-            cca2 === target ||
-            cca3 === target
+            names.includes(normalizedTarget) ||
+            codes.includes(normalizedTarget)
         );
     });
 }
-
-
 // ========================================
 // SELECT COUNTRY
 // ========================================
