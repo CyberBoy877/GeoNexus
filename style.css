@@ -498,3 +498,20 @@ footer {
     }
 
 }
+.country {
+    cursor: pointer;
+    transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.country:hover {
+    fill: #1d4ed8;
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 18px;
+    color: #475569;
+}
