@@ -395,6 +395,15 @@
 
 
     <script src="script.js"></script>
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("sw.js")
+                .then(() => console.log("GeoNexus service worker registered"))
+                .catch(error => console.error("Service worker error:", error));
+        });
+    }
+    </script>
 
 </body>
 </html>
