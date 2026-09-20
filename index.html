@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>GeoNexus | Explore the World</title>
 
     <meta
         name="description"
-        content="GeoNexus is an interactive world map for exploring countries and geographic regions."
+        content="GeoNexus — an interactive world map for exploring countries and geographic information."
     >
 
     <link rel="stylesheet" href="style.css">
 
-    <!-- D3.js -->
+    <!-- D3 -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 
     <!-- TopoJSON -->
@@ -23,80 +26,335 @@
 
 <body>
 
-    <!-- HEADER -->
-    <header class="header">
+    <!-- =========================
+         NAVIGATION
+    ========================== -->
 
-        <div class="logo">
-            🌍 GeoNexus
+    <header class="navbar">
+
+        <div class="nav-inner">
+
+            <a href="#" class="brand">
+                <span class="brand-globe">🌍</span>
+
+                <span>
+                    <strong>GeoNexus</strong>
+                    <small>Explore the World</small>
+                </span>
+            </a>
+
+            <div class="nav-actions">
+
+                <button
+                    id="themeToggle"
+                    class="icon-button"
+                    title="Toggle theme"
+                    aria-label="Toggle theme"
+                >
+                    🌙
+                </button>
+
+                <a href="#explore" class="nav-link">
+                    Explore
+                </a>
+
+            </div>
+
         </div>
-
-        <p class="tagline">
-            Explore the World. Discover Everything.
-        </p>
 
     </header>
 
 
-    <!-- MAIN CONTENT -->
+    <!-- =========================
+         HERO
+    ========================== -->
+
     <main>
 
-        <!-- HERO -->
         <section class="hero">
 
-            <h1>
-                Explore Our World
-            </h1>
+            <div class="hero-content">
 
-            <p>
-                Discover countries and geographic regions
-                through an interactive world map.
-            </p>
+                <div class="hero-badge">
+                    🌐 Interactive World Explorer
+                </div>
 
-            <!-- SEARCH -->
-            <div class="search-box">
+                <h1>
+                    Explore the
+                    <span>World.</span>
+                </h1>
 
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Search a country..."
-                    autocomplete="off"
-                >
+                <p class="hero-subtitle">
+                    Discover countries, capitals, regions, currencies,
+                    languages and geographic information through one
+                    interactive map.
+                </p>
 
-                <button onclick="searchCountry()">
-                    Search
-                </button>
+
+                <!-- SEARCH -->
+
+                <div class="search-wrapper">
+
+                    <div class="search-box">
+
+                        <span class="search-icon">
+                            🔎
+                        </span>
+
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search for a country..."
+                            autocomplete="off"
+                            aria-label="Search for a country"
+                        >
+
+                        <button
+                            id="searchButton"
+                            class="search-button"
+                        >
+                            Search
+                        </button>
+
+                    </div>
+
+                    <div
+                        id="searchSuggestions"
+                        class="search-suggestions"
+                    ></div>
+
+                </div>
+
+
+                <div class="quick-searches">
+
+                    <span>Try:</span>
+
+                    <button data-country="India">
+                        India
+                    </button>
+
+                    <button data-country="Japan">
+                        Japan
+                    </button>
+
+                    <button data-country="France">
+                        France
+                    </button>
+
+                    <button data-country="Brazil">
+                        Brazil
+                    </button>
+
+                </div>
 
             </div>
 
         </section>
 
 
-        <!-- MAP -->
-        <section class="map-container">
+        <!-- =========================
+             EXPLORER
+        ========================== -->
 
-            <h2>
-                Interactive World Map
-            </h2>
+        <section
+            id="explore"
+            class="explorer-section"
+        >
 
-            <div id="map">
+            <div class="section-heading">
 
-                <div class="loading">
-                    Loading world map...
+                <div>
+
+                    <span class="section-label">
+                        EXPLORE
+                    </span>
+
+                    <h2>
+                        Interactive World Map
+                    </h2>
+
+                    <p>
+                        Click any country to discover more.
+                    </p>
+
+                </div>
+
+                <button
+                    id="resetButton"
+                    class="secondary-button"
+                >
+                    ↻ Reset
+                </button>
+
+            </div>
+
+
+            <!-- MAP -->
+
+            <div class="map-card">
+
+                <div class="map-toolbar">
+
+                    <div class="map-status">
+
+                        <span
+                            id="statusDot"
+                            class="status-dot"
+                        ></span>
+
+                        <span id="mapStatus">
+                            Loading world map...
+                        </span>
+
+                    </div>
+
+                    <div class="map-hint">
+                        Click a country
+                    </div>
+
+                </div>
+
+
+                <div id="map">
+
+                    <div class="loading-screen">
+
+                        <div class="loader"></div>
+
+                        <p>
+                            Loading world map...
+                        </p>
+
+                    </div>
+
                 </div>
 
             </div>
 
 
-            <!-- COUNTRY INFORMATION -->
-            <div id="country-info">
+            <!-- =========================
+                 COUNTRY INFORMATION
+            ========================== -->
+
+            <section
+                id="country-info"
+                class="country-info empty-state"
+            >
+
+                <div class="empty-icon">
+                    🌍
+                </div>
 
                 <h2>
-                    🌍 Select a country
+                    Select a country
                 </h2>
 
                 <p>
-                    Click any country on the map to explore it.
+                    Click a country on the map to explore
+                    its geographic information.
                 </p>
+
+            </section>
+
+        </section>
+
+
+        <!-- =========================
+             FEATURES
+        ========================== -->
+
+        <section class="features-section">
+
+            <div class="section-heading centered">
+
+                <span class="section-label">
+                    GEO NEXUS
+                </span>
+
+                <h2>
+                    Everything at a Glance
+                </h2>
+
+                <p>
+                    Explore the world through useful geographic data.
+                </p>
+
+            </div>
+
+
+            <div class="feature-grid">
+
+                <article class="feature-card">
+
+                    <div class="feature-icon">
+                        🗺️
+                    </div>
+
+                    <h3>
+                        Interactive Map
+                    </h3>
+
+                    <p>
+                        Explore countries directly through an
+                        interactive world map.
+                    </p>
+
+                </article>
+
+
+                <article class="feature-card">
+
+                    <div class="feature-icon">
+                        🏛️
+                    </div>
+
+                    <h3>
+                        Capitals
+                    </h3>
+
+                    <p>
+                        Discover the capital city of countries
+                        around the world.
+                    </p>
+
+                </article>
+
+
+                <article class="feature-card">
+
+                    <div class="feature-icon">
+                        💰
+                    </div>
+
+                    <h3>
+                        Currencies
+                    </h3>
+
+                    <p>
+                        Find the currencies used by different
+                        countries.
+                    </p>
+
+                </article>
+
+
+                <article class="feature-card">
+
+                    <div class="feature-icon">
+                        🗣️
+                    </div>
+
+                    <h3>
+                        Languages
+                    </h3>
+
+                    <p>
+                        Explore languages associated with
+                        countries around the globe.
+                    </p>
+
+                </article>
 
             </div>
 
@@ -105,19 +363,32 @@
     </main>
 
 
-    <!-- FOOTER -->
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
     <footer>
 
-        <p>
-            © 2026 GeoNexus
-        </p>
+        <div class="footer-inner">
+
+            <div class="footer-brand">
+                🌍 <strong>GeoNexus</strong>
+            </div>
+
+            <p>
+                Explore the World. Discover Everything.
+            </p>
+
+            <span>
+                © 2026 GeoNexus
+            </span>
+
+        </div>
 
     </footer>
 
 
-    <!-- GeoNexus JavaScript -->
     <script src="script.js"></script>
 
 </body>
-
 </html>
