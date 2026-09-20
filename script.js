@@ -1,30 +1,16 @@
 /* =========================================
    GeoNexus
-   Main JavaScript
+   Version 2 — Country Explorer
    ========================================= */
-
-
-/* MAP SIZE */
 
 const width = 1000;
-
 const height = 520;
-
-
-/* =========================================
-   CREATE SVG
-   ========================================= */
 
 const svg = d3
     .select("#map")
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
     .attr("preserveAspectRatio", "xMidYMid meet");
-
-
-/* =========================================
-   MAP PROJECTION
-   ========================================= */
 
 const projection = d3
     .geoNaturalEarth1()
@@ -34,34 +20,20 @@ const projection = d3
         height / 2
     ]);
 
-
-/* =========================================
-   MAP PATH
-   ========================================= */
-
 const path = d3
     .geoPath()
     .projection(projection);
 
-
-/* =========================================
-   MAP GROUP
-   ========================================= */
-
-const mapGroup = svg
-    .append("g");
-
-
-/* =========================================
-   MAP DATA URL
-   ========================================= */
+const mapGroup = svg.append("g");
 
 const mapURL =
     "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
+let countriesData = [];
+
 
 /* =========================================
-   LOAD WORLD MAP
+   LOAD MAP
    ========================================= */
 
 fetch(mapURL)
@@ -69,11 +41,7 @@ fetch(mapURL)
     .then(response => {
 
         if (!response.ok) {
-
-            throw new Error(
-                "Unable to download world map data."
-            );
-
+            throw new Error("Unable to load map data.");
         }
 
         return response.json();
@@ -82,17 +50,13 @@ fetch(mapURL)
 
     .then(data => {
 
-
-        /* CONVERT TO GEOJSON */
-
         const countries =
             topojson.feature(
                 data,
                 data.objects.countries
             );
 
-
-        /* REMOVE LOADING MESSAGE */
+        countriesData = countries.features;
 
         const loading =
             document.querySelector(".loading");
@@ -102,86 +66,47 @@ fetch(mapURL)
         }
 
 
-        /* =========================================
-           DRAW COUNTRIES
-           ========================================= */
+        /* DRAW COUNTRIES */
 
         mapGroup
             .selectAll(".country")
-            .data(countries.features)
+            .data(countriesData)
             .enter()
             .append("path")
-
             .attr("class", "country")
-
             .attr("d", path)
-
-
-            /* CLICK */
 
             .on("click", function(event, d) {
 
-                const countryName =
-                    d.properties.name ||
-                    "Unknown Country";
-
-                showCountry(countryName);
+                selectCountry(d);
 
             })
 
-
-            /* COUNTRY NAME ON HOVER */
-
             .append("title")
 
-            .text(d => {
-
-                return (
-                    d.properties.name ||
-                    "Unknown Country"
-                );
-
-            });
+            .text(d =>
+                d.properties.name ||
+                "Unknown Country"
+            );
 
 
         console.log(
-            "GeoNexus world map loaded successfully."
+            "GeoNexus map loaded successfully."
         );
 
     })
 
-
-    /* =========================================
-       ERROR HANDLING
-       ========================================= */
-
     .catch(error => {
 
-        console.error(
-            "GeoNexus map error:",
-            error
-        );
+        console.error(error);
 
-
-        const map =
-            document.getElementById("map");
-
-
-        map.innerHTML = `
+        document.getElementById("map").innerHTML = `
 
             <div class="loading">
 
-                <h3>
-                    Map failed to load
-                </h3>
+                <h3>Map failed to load</h3>
 
-                <p>
-                    ${error.message}
-                </p>
-
-                <p>
-                    Please refresh the page.
-                </p>
+                <p>${error.message}</p>
 
             </div>
 
@@ -191,10 +116,43 @@ fetch(mapURL)
 
 
 /* =========================================
-   SHOW COUNTRY
+   SELECT COUNTRY
    ========================================= */
 
-function showCountry(countryName) {
+function selectCountry(country) {
+
+    const countryName =
+        country.properties.name ||
+        "Unknown Country";
+
+
+    /* Remove previous selection */
+
+    mapGroup
+        .selectAll(".country")
+        .classed("selected-country", false);
+
+
+    /* Highlight selected country */
+
+    mapGroup
+        .selectAll(".country")
+        .filter(d => d === country)
+        .classed("selected-country", true);
+
+
+    /* Show information */
+
+    showCountryInfo(countryName);
+
+}
+
+
+/* =========================================
+   COUNTRY INFORMATION
+   ========================================= */
+
+function showCountryInfo(countryName) {
 
     const countryInfo =
         document.getElementById(
@@ -204,15 +162,97 @@ function showCountry(countryName) {
 
     countryInfo.innerHTML = `
 
-        <h2>
-            🌍 ${countryName}
-        </h2>
+        <div class="country-header">
 
-        <p>
-            You selected ${countryName}.
-            Detailed geographic information
-            will be added in a future version.
-        </p>
+            <span class="country-icon">
+                🌍
+            </span>
+
+            <div>
+
+                <h2>
+                    ${countryName}
+                </h2>
+
+                <p>
+                    Country selected
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="country-details">
+
+            <div class="info-card">
+
+                <span>🌎</span>
+
+                <strong>
+                    Continent
+                </strong>
+
+                <p>
+                    Information coming soon
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span>🏛️</span>
+
+                <strong>
+                    Capital
+                </strong>
+
+                <p>
+                    Information coming soon
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span>👥</span>
+
+                <strong>
+                    Population
+                </strong>
+
+                <p>
+                    Information coming soon
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span>📐</span>
+
+                <strong>
+                    Area
+                </strong>
+
+                <p>
+                    Information coming soon
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="explore-button"
+            onclick="exploreCountry('${countryName}')"
+        >
+            Explore ${countryName} →
+        </button>
 
     `;
 
@@ -220,7 +260,7 @@ function showCountry(countryName) {
 
 
 /* =========================================
-   SEARCH COUNTRY
+   SEARCH
    ========================================= */
 
 function searchCountry() {
@@ -231,11 +271,13 @@ function searchCountry() {
         );
 
 
-    const country =
-        input.value.trim();
+    const searchTerm =
+        input.value
+            .trim()
+            .toLowerCase();
 
 
-    if (country === "") {
+    if (searchTerm === "") {
 
         alert(
             "Please enter a country name."
@@ -246,26 +288,55 @@ function searchCountry() {
     }
 
 
-    showCountry(country);
+    const foundCountry =
+        countriesData.find(country => {
+
+            const name =
+                country.properties.name || "";
+
+            return name
+                .toLowerCase()
+                .includes(searchTerm);
+
+        });
+
+
+    if (!foundCountry) {
+
+        alert(
+            "Country not found on the map."
+        );
+
+        return;
+
+    }
+
+
+    selectCountry(foundCountry);
+
+
+    /* Scroll to information */
+
+    document
+        .getElementById("country-info")
+        .scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
 
 }
 
 
 /* =========================================
-   ENTER KEY SEARCH
+   EXPLORE COUNTRY
    ========================================= */
 
-document
-    .getElementById("searchInput")
-    .addEventListener(
-        "keydown",
-        function(event) {
+function exploreCountry(countryName) {
 
-            if (event.key === "Enter") {
-
-                searchCountry();
-
-            }
-
-        }
+    alert(
+        "State and province exploration for " +
+        countryName +
+        " will be added next."
     );
+
+}
