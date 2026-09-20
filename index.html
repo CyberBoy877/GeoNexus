@@ -7,60 +7,67 @@
     <title>GeoNexus</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- D3 -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+    <!-- TopoJSON -->
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 </head>
 
 <body>
 
-    <header class="header">
-        <div class="logo">
-            🌍 GeoNexus
+<header class="header">
+    <div class="logo">🌍 GeoNexus</div>
+
+    <p class="tagline">
+        Explore the World. Discover Everything.
+    </p>
+</header>
+
+<main>
+
+    <section class="hero">
+        <h1>Explore Our World</h1>
+
+        <p>
+            Discover countries and geographic regions
+            through an interactive map.
+        </p>
+
+        <div class="search-box">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search a country..."
+            >
+
+            <button onclick="searchCountry()">
+                Search
+            </button>
+        </div>
+    </section>
+
+    <section class="map-container">
+
+        <h2>Interactive World Map</h2>
+
+        <div id="map"></div>
+
+        <div id="country-info">
+            <h2>Select a country</h2>
+            <p>Click any country on the map to explore it.</p>
         </div>
 
-        <p class="tagline">
-            Explore the World. Discover Everything.
-        </p>
-    </header>
+    </section>
 
-    <main>
+</main>
 
-        <section class="hero">
-            <h1>Explore Our World</h1>
+<footer>
+    <p>© 2026 GeoNexus</p>
+</footer>
 
-            <p>
-                Discover countries, states, provinces and
-                geographic regions through an interactive map.
-            </p>
-
-            <div class="search-box">
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Search a country..."
-                >
-
-                <button onclick="searchCountry()">
-                    Search
-                </button>
-            </div>
-        </section>
-
-        <section class="map-container">
-
-            <h2>Interactive World Map</h2>
-
-            <div id="map">
-                <p>World map coming soon...</p>
-            </div>
-
-        </section>
-
-    </main>
-
-    <footer>
-        <p>© 2026 GeoNexus</p>
-    </footer>
-
-    <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
