@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GeoNexus</title>
+    <title>GeoNexus | Explore the World</title>
+
+    <meta
+        name="description"
+        content="GeoNexus is an interactive world map for exploring countries and geographic regions."
+    >
 
     <link rel="stylesheet" href="style.css">
 
-    <!-- D3 -->
+    <!-- D3.js -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 
     <!-- TopoJSON -->
@@ -17,57 +23,101 @@
 
 <body>
 
-<header class="header">
-    <div class="logo">🌍 GeoNexus</div>
+    <!-- HEADER -->
+    <header class="header">
 
-    <p class="tagline">
-        Explore the World. Discover Everything.
-    </p>
-</header>
+        <div class="logo">
+            🌍 GeoNexus
+        </div>
 
-<main>
-
-    <section class="hero">
-        <h1>Explore Our World</h1>
-
-        <p>
-            Discover countries and geographic regions
-            through an interactive map.
+        <p class="tagline">
+            Explore the World. Discover Everything.
         </p>
 
-        <div class="search-box">
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Search a country..."
-            >
+    </header>
 
-            <button onclick="searchCountry()">
-                Search
-            </button>
-        </div>
-    </section>
 
-    <section class="map-container">
+    <!-- MAIN CONTENT -->
+    <main>
 
-        <h2>Interactive World Map</h2>
+        <!-- HERO -->
+        <section class="hero">
 
-        <div id="map"></div>
+            <h1>
+                Explore Our World
+            </h1>
 
-        <div id="country-info">
-            <h2>Select a country</h2>
-            <p>Click any country on the map to explore it.</p>
-        </div>
+            <p>
+                Discover countries and geographic regions
+                through an interactive world map.
+            </p>
 
-    </section>
+            <!-- SEARCH -->
+            <div class="search-box">
 
-</main>
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search a country..."
+                    autocomplete="off"
+                >
 
-<footer>
-    <p>© 2026 GeoNexus</p>
-</footer>
+                <button onclick="searchCountry()">
+                    Search
+                </button>
 
-<script src="script.js"></script>
+            </div>
+
+        </section>
+
+
+        <!-- MAP -->
+        <section class="map-container">
+
+            <h2>
+                Interactive World Map
+            </h2>
+
+            <div id="map">
+
+                <div class="loading">
+                    Loading world map...
+                </div>
+
+            </div>
+
+
+            <!-- COUNTRY INFORMATION -->
+            <div id="country-info">
+
+                <h2>
+                    🌍 Select a country
+                </h2>
+
+                <p>
+                    Click any country on the map to explore it.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <p>
+            © 2026 GeoNexus
+        </p>
+
+    </footer>
+
+
+    <!-- GeoNexus JavaScript -->
+    <script src="script.js"></script>
 
 </body>
+
 </html>
