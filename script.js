@@ -257,12 +257,7 @@ function showCountryInfo(country) {
         country.region ||
         "Unknown";
 
-    const population =
-        country.population
-            ? formatNumber(
-                country.population
-            )
-            : "Not available";
+    
 
     const area =
         country.area
