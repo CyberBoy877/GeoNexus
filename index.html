@@ -1,227 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="google-site-verification" content="tL1fkBtnwrqlP6JzFEMxQmbzTV7RmXgeZdWcjdfiIZc" />
+
     <meta charset="UTF-8">
+
+    <meta name="google-site-verification"
+          content="tL1fkBtnwrqlP6JzFEMxQmbzTV7RmXgeZdWcjdfiIZc">
 
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>GeoNexus | Explore the World</title>
+    <title>GeoNexus | Interactive World Map & Country Explorer</title>
 
     <meta
         name="description"
-        content="GeoNexus — an interactive world map for exploring countries and geographic information."
+        content="GeoNexus is an interactive world map and country explorer. Discover capitals, regions, currencies, languages, areas, borders and geographic information."
     >
 
-    <link rel="stylesheet" href="style.css">
+    <meta
+        name="theme-color"
+        content="#2563eb"
+    >
+
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" href="icon-512.png">
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="default"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        href="icon-512.png"
+    >
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
 
     <!-- D3 -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 
     <!-- TopoJSON -->
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
 </head>
 
 <body>
 
-    <!-- =========================
-         NAVIGATION
-    ========================== -->
+<header class="navbar">
 
-    <header class="navbar">
+    <div class="nav-inner">
 
-        <div class="nav-inner">
+        <a href="#" class="brand">
 
-            <a href="#" class="brand">
-                <span class="brand-globe">🌍</span>
+            <span class="brand-globe">🌍</span>
 
-                <span>
-                    <strong>GeoNexus</strong>
-                    <small>Explore the World</small>
-                </span>
+            <span>
+                <strong>GeoNexus</strong>
+                <small>Explore the World</small>
+            </span>
+
+        </a>
+
+        <div class="nav-actions">
+
+            <a href="#explore" class="nav-link">
+                Explore
             </a>
 
-            <div class="nav-actions">
+            <button
+                id="themeToggle"
+                class="icon-button"
+                title="Toggle theme"
+                aria-label="Toggle theme"
+            >
+                🌙
+            </button>
 
-                <button
-                    id="themeToggle"
-                    class="icon-button"
-                    title="Toggle theme"
-                    aria-label="Toggle theme"
-                >
-                    🌙
+        </div>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="hero-badge">
+                🌐 Interactive World Explorer
+            </div>
+
+            <h1>
+                Explore the
+                <span>World.</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                Discover countries, capitals, regions, currencies,
+                languages, borders and geographic information through
+                one interactive map.
+            </p>
+
+
+            <div class="search-wrapper">
+
+                <div class="search-box">
+
+                    <span class="search-icon">
+                        🔎
+                    </span>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search country, capital or ISO code..."
+                        autocomplete="off"
+                        aria-label="Search for a country"
+                    >
+
+                    <button
+                        id="searchButton"
+                        class="search-button"
+                    >
+                        Search
+                    </button>
+
+                </div>
+
+                <div
+                    id="searchSuggestions"
+                    class="search-suggestions"
+                ></div>
+
+            </div>
+
+
+            <div class="quick-searches">
+
+                <span>Try:</span>
+
+                <button data-country="India">
+                    India
                 </button>
 
-                <a href="#explore" class="nav-link">
-                    Explore
-                </a>
+                <button data-country="Japan">
+                    Japan
+                </button>
+
+                <button data-country="France">
+                    France
+                </button>
+
+                <button data-country="Brazil">
+                    Brazil
+                </button>
+
+                <button id="randomCountryButton">
+                    🎲 Random
+                </button>
 
             </div>
 
         </div>
 
-    </header>
+    </section>
 
 
-    <!-- =========================
-         HERO
-    ========================== -->
+    <!-- EXPLORER -->
 
-    <main>
+    <section
+        id="explore"
+        class="explorer-section"
+    >
 
-        <section class="hero">
+        <div class="section-heading">
 
-            <div class="hero-content">
+            <div>
 
-                <div class="hero-badge">
-                    🌐 Interactive World Explorer
-                </div>
+                <span class="section-label">
+                    EXPLORE
+                </span>
 
-                <h1>
-                    Explore the
-                    <span>World.</span>
-                </h1>
+                <h2>
+                    Interactive World Map
+                </h2>
 
-                <p class="hero-subtitle">
-                    Discover countries, capitals, regions, currencies,
-                    languages and geographic information through one
-                    interactive map.
+                <p>
+                    Click, drag and zoom the map to explore the world.
                 </p>
 
-
-                <!-- SEARCH -->
-
-                <div class="search-wrapper">
-
-                    <div class="search-box">
-
-                        <span class="search-icon">
-                            🔎
-                        </span>
-
-                        <input
-                            type="text"
-                            id="searchInput"
-                            placeholder="Search for a country..."
-                            autocomplete="off"
-                            aria-label="Search for a country"
-                        >
-
-                        <button
-                            id="searchButton"
-                            class="search-button"
-                        >
-                            Search
-                        </button>
-
-                    </div>
-
-                    <div
-                        id="searchSuggestions"
-                        class="search-suggestions"
-                    ></div>
-
-                </div>
-
-
-                <div class="quick-searches">
-
-                    <span>Try:</span>
-
-                    <button data-country="India">
-                        India
-                    </button>
-
-                    <button data-country="Japan">
-                        Japan
-                    </button>
-
-                    <button data-country="France">
-                        France
-                    </button>
-
-                    <button data-country="Brazil">
-                        Brazil
-                    </button>
-
-                </div>
-
             </div>
 
-        </section>
+            <button
+                id="resetButton"
+                class="secondary-button"
+            >
+                ↻ Reset View
+            </button>
+
+        </div>
 
 
-        <!-- =========================
-             EXPLORER
-        ========================== -->
+        <!-- MAP -->
 
-        <section
-            id="explore"
-            class="explorer-section"
-        >
+        <div class="map-card">
 
-            <div class="section-heading">
+            <div class="map-toolbar">
 
-                <div>
+                <div class="map-status">
 
-                    <span class="section-label">
-                        EXPLORE
+                    <span
+                        id="statusDot"
+                        class="status-dot"
+                    ></span>
+
+                    <span id="mapStatus">
+                        Loading world map...
                     </span>
 
-                    <h2>
-                        Interactive World Map
-                    </h2>
-
-                    <p>
-                        Click any country to discover more.
-                    </p>
-
                 </div>
 
-                <button
-                    id="resetButton"
-                    class="secondary-button"
-                >
-                    ↻ Reset
-                </button>
+                <div class="map-hint">
+                    Click • Drag • Scroll to zoom
+                </div>
 
             </div>
 
 
-            <!-- MAP -->
-
-            <div class="map-card">
-
-                <div class="map-toolbar">
-
-                    <div class="map-status">
-
-                        <span
-                            id="statusDot"
-                            class="status-dot"
-                        ></span>
-
-                        <span id="mapStatus">
-                            Loading world map...
-                        </span>
-
-                    </div>
-
-                    <div class="map-hint">
-                        Click a country
-                    </div>
-
-                </div>
-
+            <div class="map-area">
 
                 <div id="map">
 
@@ -237,174 +262,214 @@
 
                 </div>
 
-            </div>
 
+                <div class="map-controls">
 
-            <!-- =========================
-                 COUNTRY INFORMATION
-            ========================== -->
+                    <button
+                        id="zoomIn"
+                        title="Zoom in"
+                        aria-label="Zoom in"
+                    >
+                        +
+                    </button>
 
-            <section
-                id="country-info"
-                class="country-info empty-state"
-            >
+                    <button
+                        id="zoomOut"
+                        title="Zoom out"
+                        aria-label="Zoom out"
+                    >
+                        −
+                    </button>
 
-                <div class="empty-icon">
-                    🌍
+                    <button
+                        id="resetZoom"
+                        title="Reset map view"
+                        aria-label="Reset map view"
+                    >
+                        ⌂
+                    </button>
+
                 </div>
 
-                <h2>
-                    Select a country
-                </h2>
-
-                <p>
-                    Click a country on the map to explore
-                    its geographic information.
-                </p>
-
-            </section>
-
-        </section>
-
-
-        <!-- =========================
-             FEATURES
-        ========================== -->
-
-        <section class="features-section">
-
-            <div class="section-heading centered">
-
-                <span class="section-label">
-                    GEO NEXUS
-                </span>
-
-                <h2>
-                    Everything at a Glance
-                </h2>
-
-                <p>
-                    Explore the world through useful geographic data.
-                </p>
-
             </div>
-
-
-            <div class="feature-grid">
-
-                <article class="feature-card">
-
-                    <div class="feature-icon">
-                        🗺️
-                    </div>
-
-                    <h3>
-                        Interactive Map
-                    </h3>
-
-                    <p>
-                        Explore countries directly through an
-                        interactive world map.
-                    </p>
-
-                </article>
-
-
-                <article class="feature-card">
-
-                    <div class="feature-icon">
-                        🏛️
-                    </div>
-
-                    <h3>
-                        Capitals
-                    </h3>
-
-                    <p>
-                        Discover the capital city of countries
-                        around the world.
-                    </p>
-
-                </article>
-
-
-                <article class="feature-card">
-
-                    <div class="feature-icon">
-                        💰
-                    </div>
-
-                    <h3>
-                        Currencies
-                    </h3>
-
-                    <p>
-                        Find the currencies used by different
-                        countries.
-                    </p>
-
-                </article>
-
-
-                <article class="feature-card">
-
-                    <div class="feature-icon">
-                        🗣️
-                    </div>
-
-                    <h3>
-                        Languages
-                    </h3>
-
-                    <p>
-                        Explore languages associated with
-                        countries around the globe.
-                    </p>
-
-                </article>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- =========================
-         FOOTER
-    ========================== -->
-
-    <footer>
-
-        <div class="footer-inner">
-
-            <div class="footer-brand">
-                🌍 <strong>GeoNexus</strong>
-            </div>
-
-            <p>
-                Explore the World. Discover Everything.
-            </p>
-
-            <span>
-                © 2026 GeoNexus
-            </span>
 
         </div>
 
-    </footer>
+
+        <!-- COUNTRY INFORMATION -->
+
+        <section
+            id="country-info"
+            class="country-info empty-state"
+        >
+
+            <div class="empty-icon">
+                🌍
+            </div>
+
+            <h2>
+                Select a country
+            </h2>
+
+            <p>
+                Click a country on the map or search above
+                to explore its geographic information.
+            </p>
+
+        </section>
+
+    </section>
 
 
-    <script src="script.js"></script>
-    <script>
-    if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-            navigator.serviceWorker.register("sw.js")
-                .then(() => console.log("GeoNexus service worker registered"))
-                .catch(error => console.error("Service worker error:", error));
-        });
-    }
-    </script>
+    <!-- FEATURES -->
+
+    <section class="features-section">
+
+        <div class="section-heading centered">
+
+            <span class="section-label">
+                GEONEXUS
+            </span>
+
+            <h2>
+                Explore More
+            </h2>
+
+            <p>
+                Useful geographic information in one place.
+            </p>
+
+        </div>
+
+
+        <div class="feature-grid">
+
+            <article class="feature-card">
+
+                <div class="feature-icon">
+                    🗺️
+                </div>
+
+                <h3>
+                    Interactive Map
+                </h3>
+
+                <p>
+                    Zoom, pan and select countries directly
+                    from the world map.
+                </p>
+
+            </article>
+
+
+            <article class="feature-card">
+
+                <div class="feature-icon">
+                    🔎
+                </div>
+
+                <h3>
+                    Smart Search
+                </h3>
+
+                <p>
+                    Search using country names, capitals,
+                    ISO codes and alternate names.
+                </p>
+
+            </article>
+
+
+            <article class="feature-card">
+
+                <div class="feature-icon">
+                    🏛️
+                </div>
+
+                <h3>
+                    Capitals
+                </h3>
+
+                <p>
+                    Discover capital cities from countries
+                    around the world.
+                </p>
+
+            </article>
+
+
+            <article class="feature-card">
+
+                <div class="feature-icon">
+                    🧭
+                </div>
+
+                <h3>
+                    Borders
+                </h3>
+
+                <p>
+                    Explore neighbouring countries and
+                    geographic relationships.
+                </p>
+
+            </article>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+
+    <div class="footer-inner">
+
+        <div class="footer-brand">
+            🌍 <strong>GeoNexus</strong>
+        </div>
+
+        <p>
+            Explore the World. Discover Everything.
+        </p>
+
+        <span>
+            © 2026 GeoNexus
+        </span>
+
+    </div>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+<script>
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker
+            .register("sw.js")
+            .then(() => {
+                console.log(
+                    "GeoNexus service worker registered"
+                );
+            })
+            .catch(error => {
+                console.error(
+                    "Service worker error:",
+                    error
+                );
+            });
+
+    });
+
+}
+
+</script>
 
 </body>
 </html>
