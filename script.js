@@ -1102,4 +1102,56 @@ function escapeQuotes(value) {
 }
 
 
-/* ==========
+/* =========================
+   INITIALIZE GEONEXUS
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    loadData();
+
+    searchButton.addEventListener("click", searchCountry);
+
+    searchInput.addEventListener("input", updateSuggestions);
+
+    searchInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            searchCountry();
+        }
+    });
+
+    document.querySelectorAll("[data-country]").forEach(button => {
+        button.addEventListener("click", () => {
+            searchInput.value = button.dataset.country;
+            searchCountry();
+        });
+    });
+
+    document.getElementById("randomCountryButton")
+        ?.addEventListener("click", () => {
+            if (!countriesData.length) return;
+
+            const country = countriesData[
+                Math.floor(Math.random() * countriesData.length)
+            ];
+
+            searchInput.value = country.name.common;
+            searchCountry();
+        });
+
+    resetButton.addEventListener("click", resetMap);
+
+    document.getElementById("resetZoom")
+        ?.addEventListener("click", resetMap);
+
+    themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-theme");
+
+        themeToggle.textContent =
+            document.body.classList.contains("dark-theme")
+                ? "☀️"
+                : "🌙";
+    });
+
+});
+
