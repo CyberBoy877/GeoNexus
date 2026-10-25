@@ -1438,3 +1438,47 @@ body.dark .youtube-button:hover {
         width: 100%;
     }
 }
+
+/* GeoNexus dark theme */
+body.dark-theme {
+    background-color: #0b1120;
+    color: #e5e7eb;
+}
+
+body.dark-theme .navbar,
+body.dark-theme .map-card,
+body.dark-theme .country-info,
+body.dark-theme .feature-card {
+    background-color: #111827;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+body.dark-theme h1,
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme p,
+body.dark-theme small {
+    color: inherit;
+}
+
+body.dark-theme .hero,
+body.dark-theme .explorer-section,
+body.dark-theme .features-section {
+    background-color: #0b1120;
+}
+
+body.dark-theme input {
+    background-color: #1f2937;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+body.dark-theme input::placeholder {
+    color: #9ca3af;
+}
+
+body.dark-theme .map-area {
+    background-color: #111827;
+}
+
