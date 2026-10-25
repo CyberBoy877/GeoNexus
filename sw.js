@@ -1,4 +1,4 @@
-const CACHE_NAME = "geonexus-v1";
+const CACHE_NAME = "geonexus-v2";
 
 const APP_FILES = [
     "./",
